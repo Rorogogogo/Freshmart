@@ -2,45 +2,76 @@
 import React from 'react'
 import Image from 'next/image'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { useCart } from '@/contexts/CartContext'
+import { toast } from 'react-hot-toast'
 
 interface GroceryItemProps {
-  id: number
+  id: string
   name: string
   price: number
-  category: string
-  imgSrc: string
+  categoryName: string
+  imageUrl: string
   rating: number
-  stock: number
-  onClickDetails: (id: number) => void
+  stockQuantity: number
+  onClickDetails: (id: string) => void
 }
 
 const GroceryItem: React.FC<GroceryItemProps> = ({
   id,
   name,
   price,
-  category,
-  imgSrc,
+  categoryName,
+  imageUrl,
   rating,
-  stock,
+  stockQuantity,
   onClickDetails,
 }) => {
+  const { addToCart } = useCart()
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent triggering the parent onClick (opening product details)
+
+    if (stockQuantity <= 0) {
+      toast.error('This product is out of stock')
+      return
+    }
+
+    addToCart({
+      id,
+      name,
+      price,
+      categoryName,
+      imageUrl,
+      rating,
+      stockQuantity,
+      reviewCount: 0,
+      description: '',
+      categoryId: '',
+      isDeleted: false,
+      createdAt: '',
+      updatedAt: null,
+    })
+
+    toast.success(`${name} added to cart`)
+  }
+
   return (
     <div
       className="bg-white dark:bg-darkmode rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:scale-105 cursor-pointer"
       onClick={() => onClickDetails(id)}>
       <div className="relative w-full h-48">
         <Image
-          src={imgSrc}
+          src={imageUrl}
           alt={name}
           fill
           className="object-cover"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-          {stock > 0 ? 'In Stock' : 'Out of Stock'}
+          {stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
         </div>
         <div className="absolute top-2 left-2 bg-indigo-500 text-white text-xs px-2 py-1 rounded-full">
-          {category}
+          {categoryName}
         </div>
       </div>
       <div className="p-4">
@@ -74,12 +105,13 @@ const GroceryItem: React.FC<GroceryItemProps> = ({
             ${price.toFixed(2)}
           </p>
           <button
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded text-sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              // Add to cart logic would go here
-              console.log(`Added ${name} to cart`)
-            }}>
+            className={`px-3 py-1 rounded text-sm ${
+              stockQuantity > 0
+                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+            onClick={handleAddToCart}
+            disabled={stockQuantity <= 0}>
             Add to Cart
           </button>
         </div>

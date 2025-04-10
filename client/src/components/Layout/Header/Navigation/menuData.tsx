@@ -1,10 +1,26 @@
 import { HeaderItem } from '@/types/menu'
 
-export const headerData: HeaderItem[] = [
-  { label: 'About Us', href: '#' },
-  { label: 'Services', href: '#' },
+// Base header items that are always shown
+const baseHeaderItems: HeaderItem[] = [
+  { label: 'About', href: '/about' },
   { label: 'Grocery', href: '/grocery' },
-  { label: 'FAQ', href: '#' },
-  { label: 'Blog', href: '#' },
-  { label: 'Docs', href: '/documentation' },
 ]
+
+// Function to get header items based on user roles
+export const getHeaderItems = (userRoles?: string[]): HeaderItem[] => {
+  // Clone the base items
+  const items = [...baseHeaderItems]
+
+  // Add admin dashboard link if user has admin role
+  if (userRoles?.some((role) => role.toUpperCase() === 'ADMIN')) {
+    items.push({
+      label: 'Admin',
+      href: '/admin/products',
+    })
+  }
+
+  return items
+}
+
+// Keep headerData for backward compatibility
+export const headerData: HeaderItem[] = baseHeaderItems

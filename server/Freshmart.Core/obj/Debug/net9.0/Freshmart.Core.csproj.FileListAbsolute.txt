@@ -1,0 +1,12 @@
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/bin/Debug/net9.0/Freshmart.Core.deps.json
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/bin/Debug/net9.0/Freshmart.Core.dll
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/bin/Debug/net9.0/Freshmart.Core.pdb
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/Freshmart.Core.GeneratedMSBuildEditorConfig.editorconfig
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/Freshmart.Core.AssemblyInfoInputs.cache
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/Freshmart.Core.AssemblyInfo.cs
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/Freshmart.Core.csproj.CoreCompileInputs.cache
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/Freshmart.Core.sourcelink.json
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/Freshmart.Core.dll
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/refint/Freshmart.Core.dll
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/Freshmart.Core.pdb
+/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/Debug/net9.0/ref/Freshmart.Core.dll

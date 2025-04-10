@@ -1,8 +1,9 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { headerData } from '../Header/Navigation/menuData'
+import { headerData, getHeaderItems } from '../Header/Navigation/menuData'
 import Logo from './Logo'
 import HeaderLink from '../Header/Navigation/HeaderLink'
 import MobileHeaderLink from '../Header/Navigation/MobileHeaderLink'
@@ -11,21 +12,29 @@ import SignUp from '@/components/Auth/SignUp'
 import { useTheme } from 'next-themes'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import SearchBox from '@/components/Common/SearchBox'
+import { useUser } from '@/contexts/UserContext'
+import { useNotification } from '@/contexts/NotificationContext'
+import { useCart } from '@/contexts/CartContext'
 
 const Header: React.FC = () => {
   const pathUrl = usePathname()
   const { theme, setTheme } = useTheme()
+  const { user, isAuthenticated, logout } = useUser()
+  const notification = useNotification()
+  const { toggleCart, totalItems } = useCart()
 
   const [navbarOpen, setNavbarOpen] = useState(false)
   const [sticky, setSticky] = useState(false)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isSignUpOpen, setIsSignUpOpen] = useState(false)
   const [searchVisible, setSearchVisible] = useState(false)
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
 
   const navbarRef = useRef<HTMLDivElement>(null)
   const signInRef = useRef<HTMLDivElement>(null)
   const signUpRef = useRef<HTMLDivElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
 
   // Don't show search on certain pages
   const excludedPaths = [
@@ -36,7 +45,11 @@ const Header: React.FC = () => {
     '/grocery', // Grocery page has its own search
   ]
 
-  const showSearch = !excludedPaths.some((path) => pathUrl.startsWith(path))
+  const showSearch =
+    !pathUrl || !excludedPaths.some((path) => pathUrl.startsWith(path))
+
+  // Get dynamically generated menu items based on user role
+  const menuItems = user?.roles ? getHeaderItems(user.roles) : headerData
 
   const handleScroll = () => {
     setSticky(window.scrollY >= 80)
@@ -62,6 +75,13 @@ const Header: React.FC = () => {
     ) {
       setNavbarOpen(false)
     }
+    if (
+      profileMenuRef.current &&
+      !profileMenuRef.current.contains(event.target as Node) &&
+      isProfileMenuOpen
+    ) {
+      setIsProfileMenuOpen(false)
+    }
   }
 
   useEffect(() => {
@@ -71,7 +91,7 @@ const Header: React.FC = () => {
       window.removeEventListener('scroll', handleScroll)
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [navbarOpen, isSignInOpen, isSignUpOpen])
+  }, [navbarOpen, isSignInOpen, isSignUpOpen, isProfileMenuOpen])
 
   useEffect(() => {
     if (isSignInOpen || isSignUpOpen || navbarOpen) {
@@ -81,8 +101,24 @@ const Header: React.FC = () => {
     }
   }, [isSignInOpen, isSignUpOpen, navbarOpen])
 
+  useEffect(() => {
+    if (user) {
+      console.log('User data in header:', user)
+      console.log('User roles:', user.roles)
+      console.log(
+        'Has admin role:',
+        user?.roles?.some((role: string) => role.toUpperCase() === 'ADMIN')
+      )
+    }
+  }, [user])
+
   const toggleTheme = () => {
     setTheme(theme === 'dark' ? 'light' : 'dark')
+  }
+
+  const handleLogout = () => {
+    logout()
+    setIsProfileMenuOpen(false)
   }
 
   return (
@@ -101,7 +137,7 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center space-x-8">
-            {headerData.map((item, index) => (
+            {menuItems.map((item, index) => (
               <HeaderLink key={index} item={item} />
             ))}
           </nav>
@@ -153,8 +189,8 @@ const Header: React.FC = () => {
             </button>
 
             {/* Shopping Cart Icon */}
-            <Link
-              href="/cart"
+            <button
+              onClick={toggleCart}
               className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <Icon
                 icon="ph:shopping-cart"
@@ -162,27 +198,114 @@ const Header: React.FC = () => {
                 width={24}
                 height={24}
               />
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-indigo-600 rounded-full">
-                0
-              </span>
-            </Link>
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-indigo-600 rounded-full">
+                  {totalItems}
+                </span>
+              )}
+            </button>
 
-            {/* Desktop Authentication Buttons */}
+            {/* Desktop Authentication Buttons or User Profile */}
             <div className="hidden md:flex items-center space-x-4">
-              <button
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
-                onClick={() => {
-                  setIsSignInOpen(true)
-                }}>
-                Sign In
-              </button>
-              <button
-                className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
-                onClick={() => {
-                  setIsSignUpOpen(true)
-                }}>
-                Sign Up
-              </button>
+              {isAuthenticated ? (
+                <>
+                  {/* Add Admin Dashboard button before profile dropdown */}
+                  {user?.roles?.some(
+                    (role: string) => role.toUpperCase() === 'ADMIN'
+                  ) && (
+                    <Link
+                      href="/admin/products"
+                      className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                      className="flex items-center space-x-2 focus:outline-none">
+                      <div className="h-9 w-9 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                        {user?.image ? (
+                          <Image
+                            src={user.image}
+                            alt={user.name || 'User'}
+                            width={36}
+                            height={36}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 text-sm font-medium">
+                            {user?.name?.charAt(0) ||
+                              user?.email?.charAt(0) ||
+                              'U'}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {user?.name?.split(' ')[0] || 'User'}
+                      </span>
+                      <Icon
+                        icon="ph:caret-down"
+                        className="text-gray-500"
+                        width={16}
+                        height={16}
+                      />
+                    </button>
+
+                    {/* User Profile Dropdown */}
+                    {isProfileMenuOpen && (
+                      <div
+                        ref={profileMenuRef}
+                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
+                        <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {user?.name || 'User'}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {user?.email}
+                          </p>
+                        </div>
+                        {user?.roles?.some(
+                          (role: string) => role.toUpperCase() === 'ADMIN'
+                        ) && (
+                          <Link
+                            href="/admin/products"
+                            className="block px-4 py-2 text-sm text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            Admin Dashboard
+                          </Link>
+                        )}
+                        <Link
+                          href="/profile"
+                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                          Profile
+                        </Link>
+                        <Link
+                          href="/orders"
+                          className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                          Orders
+                        </Link>
+                        <button
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/signin"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -231,29 +354,80 @@ const Header: React.FC = () => {
         )}
 
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {headerData.map((item, index) => (
+          {menuItems.map((item, index) => (
             <MobileHeaderLink key={index} item={item} />
           ))}
         </div>
         <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-center space-x-4 px-4">
-            <button
-              className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 py-2 px-4 rounded-lg text-sm font-medium transition-colors"
-              onClick={() => {
-                setIsSignInOpen(true)
-                setNavbarOpen(false)
-              }}>
-              Sign In
-            </button>
-            <button
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
-              onClick={() => {
-                setIsSignUpOpen(true)
-                setNavbarOpen(false)
-              }}>
-              Sign Up
-            </button>
-          </div>
+          {isAuthenticated ? (
+            <div className="px-4 space-y-3">
+              <div className="flex items-center space-x-3 mb-3">
+                <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                  {user?.image ? (
+                    <Image
+                      src={user.image}
+                      alt={user.name || 'User'}
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 text-sm font-medium">
+                      {user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="text-base font-medium text-gray-800 dark:text-white">
+                    {user?.name || 'User'}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                    {user?.email}
+                  </p>
+                </div>
+              </div>
+              {user?.roles?.some(
+                (role: string) => role.toUpperCase() === 'ADMIN'
+              ) && (
+                <Link
+                  href="/admin/products"
+                  className="block w-full text-left py-2 px-4 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-900/50"
+                  onClick={() => setNavbarOpen(false)}>
+                  Admin Dashboard
+                </Link>
+              )}
+              <Link
+                href="/profile"
+                className="block w-full text-left py-2 px-4 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                Profile
+              </Link>
+              <Link
+                href="/orders"
+                className="block w-full text-left py-2 px-4 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700">
+                Orders
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left py-2 px-4 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30">
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center space-x-4 px-4">
+              <Link
+                href="/signin"
+                className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 py-2 px-4 rounded-lg text-sm font-medium transition-colors text-center"
+                onClick={() => setNavbarOpen(false)}>
+                Sign In
+              </Link>
+              <Link
+                href="/signup"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors text-center"
+                onClick={() => setNavbarOpen(false)}>
+                Sign Up
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 

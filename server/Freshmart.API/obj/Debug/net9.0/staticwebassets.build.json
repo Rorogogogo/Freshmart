@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "2Qvxg1WQTgJHxaG8L4Baa7gsz9oHtgx3fiBclmwLYAg=",
+  "Source": "Freshmart.API",
+  "BasePath": "_content/Freshmart.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
