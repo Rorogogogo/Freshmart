@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+section {
+  @apply py-32;
+}
+
+.slick-next {
+  right: -70px !important;
+}
+
+.slick-prev {
+  left: -70px !important;
+}
+
+.bg-joinus {
+  background-image: url('/images/joinus/horn.svg'),
+    url('/images/joinus/paint.svg');
+  background-repeat: no-repeat, no-repeat;
+  background-position: 84% 100%, 12% 18%;
+}
