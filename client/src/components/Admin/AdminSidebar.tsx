@@ -44,17 +44,6 @@ export default function AdminSidebar() {
               Categories
             </Link>
           </li>
-          <li>
-            <Link
-              href="/admin/users"
-              className={`block p-2 rounded ${
-                isActive('/admin/users')
-                  ? 'bg-green-100 text-green-700'
-                  : 'hover:bg-gray-100'
-              }`}>
-              Users
-            </Link>
-          </li>
           <li className="pt-4 mt-4 border-t">
             <Link href="/" className="block p-2 hover:bg-gray-100 rounded">
               Back to Store

@@ -5,8 +5,37 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import AdminLayout from '@/components/Admin/AdminLayout'
-import usersApi, { User } from '@/api/usersApi'
+import { usersApi } from '@/api/usersApi'
+import { User } from '@/api/usersApi'
 import { useNotification } from '@/contexts/NotificationContext'
+
+// Mockup data until API connection is fixed
+const MOCK_USERS: User[] = [
+  {
+    id: '1',
+    email: 'admin@example.com',
+    firstName: 'Admin',
+    lastName: 'User',
+    imageUrl: null,
+    roles: ['ADMIN'],
+    emailConfirmed: true,
+    isDeleted: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    email: 'user@example.com',
+    firstName: 'Regular',
+    lastName: 'User',
+    imageUrl: null,
+    roles: ['USER'],
+    emailConfirmed: true,
+    isDeleted: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+]
 
 export default function UsersAdminPage() {
   const router = useRouter()
@@ -18,8 +47,10 @@ export default function UsersAdminPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [pageSize] = useState(10)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('UsersAdminPage mounted - Fetching users...')
     fetchUsers()
   }, [])
 
@@ -49,26 +80,44 @@ export default function UsersAdminPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true)
+      console.log('Starting API request to fetch users...')
+      setApiError(null)
 
-      // In a real implementation, you'd need a backend API endpoint to get all users
-      // For now, we'll simulate it with the existing endpoint
-      const response = await usersApi.getUsers()
-
-      if (response.success) {
-        setUsers(response.data)
-        // Initial filtering will happen in the useEffect
-      } else {
-        notification.error(response.message || 'Failed to fetch users')
-        setUsers([])
-        setFilteredUsers([])
+      // Check if usersApi exists and has getUsers method
+      if (!usersApi || typeof usersApi.getUsers !== 'function') {
+        console.error('usersApi or usersApi.getUsers is not available')
+        setApiError('API client not properly initialized')
+        setUsers(MOCK_USERS)
+        return
       }
 
-      setLoading(false)
+      // Try to fetch from API first
+      try {
+        const response = await usersApi.getUsers()
+        console.log('Users API response:', response)
+
+        if (response.success) {
+          setUsers(response.data)
+          return // Exit early if API call succeeds
+        } else {
+          console.warn('API returned success:false', response.message)
+          setApiError(`API error: ${response.message}`)
+        }
+      } catch (err) {
+        console.error('API call failed:', err)
+        setApiError(
+          `API call error: ${err instanceof Error ? err.message : String(err)}`
+        )
+      }
+
+      // Fallback to mock data if API fails
+      console.log('Using mock user data as fallback')
+      setUsers(MOCK_USERS)
     } catch (error) {
-      console.error('Error fetching users:', error)
-      notification.error('Failed to fetch users. Please try again.')
-      setUsers([])
-      setFilteredUsers([])
+      console.error('Error in fetchUsers:', error)
+      notification.error('Failed to fetch users. Using mock data instead.')
+      setUsers(MOCK_USERS)
+    } finally {
       setLoading(false)
     }
   }
@@ -104,6 +153,18 @@ export default function UsersAdminPage() {
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-medium">User List</h2>
         </div>
+
+        {apiError && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded">
+            <p>
+              <strong>Note:</strong> {apiError}
+            </p>
+            <p className="text-sm mt-1">
+              Using mock data instead. Please ensure the backend API is running
+              and authentication is configured correctly.
+            </p>
+          </div>
+        )}
 
         {/* Search */}
         <div className="bg-gray-50 rounded-lg p-4">

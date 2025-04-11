@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import AdminLayout from '@/components/Admin/AdminLayout'
-import usersApi, { User, UpdateUserDto } from '@/api/usersApi'
+import { usersApi } from '@/api/usersApi'
+import { User, UpdateUserDto } from '@/api/usersApi'
 import { useNotification } from '@/contexts/NotificationContext'
 import Image from 'next/image'
 
@@ -33,6 +34,15 @@ export default function EditUserPage() {
     const fetchUserData = async () => {
       try {
         setLoading(true)
+
+        // Check if usersApi exists and has getUserById method
+        if (!usersApi || typeof usersApi.getUserById !== 'function') {
+          console.error('usersApi or usersApi.getUserById is not available')
+          notification.error('API client not properly initialized')
+          router.push('/admin/users')
+          return
+        }
+
         const response = await usersApi.getUserById(userId)
 
         if (response.success) {

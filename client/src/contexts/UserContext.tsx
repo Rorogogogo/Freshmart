@@ -62,9 +62,38 @@ export function UserProvider({ children }: UserProviderProps) {
   const isAuthenticated = !!session?.user
   const notification = useNotification()
 
+  // Check localStorage token on mount
+  useEffect(() => {
+    console.log('UserProvider mounted, checking localStorage for token')
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token')
+      console.log(
+        'Token in localStorage:',
+        token ? 'Present (length: ' + token.length + ')' : 'Not found'
+      )
+
+      // Check for user data in localStorage
+      const storedUser = localStorage.getItem('user')
+      console.log('User in localStorage:', storedUser ? 'Present' : 'Not found')
+
+      // If we have session but no token, we need to save the token
+      if (session?.user?.accessToken && !token) {
+        console.log('Found session token but not in localStorage, saving token')
+        localStorage.setItem('token', session.user.accessToken)
+      }
+    }
+  }, [session])
+
   useEffect(() => {
     if (session?.user) {
       console.log('Session user in UserContext:', session.user)
+
+      // Store the access token in localStorage if available
+      if (session.user.accessToken) {
+        console.log('Saving access token to localStorage')
+        localStorage.setItem('token', session.user.accessToken)
+      }
+
       // Create a copy of the user object
       const enhancedUser = { ...session.user }
 
@@ -107,6 +136,9 @@ export function UserProvider({ children }: UserProviderProps) {
 
       console.log('Final enhanced user object:', enhancedUser)
       setUser(enhancedUser)
+
+      // Store the enhanced user object in localStorage
+      localStorage.setItem('user', JSON.stringify(enhancedUser))
     } else {
       setUser(null)
     }
@@ -118,6 +150,7 @@ export function UserProvider({ children }: UserProviderProps) {
       notification.success('Logged out successfully')
       // Clear any local storage items if needed
       localStorage.removeItem('user')
+      localStorage.removeItem('token')
     } catch (error) {
       console.error('Logout error:', error)
       notification.error('Failed to log out')

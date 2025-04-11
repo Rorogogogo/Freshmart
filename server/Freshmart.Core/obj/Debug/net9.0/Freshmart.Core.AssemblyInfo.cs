@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Freshmart.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4ce62710436d1acd27733ac93884cd9c832de6ce")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+979bb2d7f43e9b96f88ce9dcedcd1b1afe8f576a")]
 [assembly: System.Reflection.AssemblyProductAttribute("Freshmart.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Freshmart.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

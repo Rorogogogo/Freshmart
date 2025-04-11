@@ -13,7 +13,6 @@
         "packagesPath": "/Users/roro/.nuget/packages/",
         "outputPath": "/Users/roro/Downloads/work/Freshmart/server/Freshmart.API/obj/",
         "projectStyle": "PackageReference",
-        "UsingMicrosoftNETSdk": false,
         "configFilePaths": [
           "/Users/roro/.nuget/NuGet/NuGet.Config"
         ],
@@ -45,7 +44,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -110,7 +110,6 @@
         "packagesPath": "/Users/roro/.nuget/packages/",
         "outputPath": "/Users/roro/Downloads/work/Freshmart/server/Freshmart.Core/obj/",
         "projectStyle": "PackageReference",
-        "UsingMicrosoftNETSdk": false,
         "configFilePaths": [
           "/Users/roro/.nuget/NuGet/NuGet.Config"
         ],
@@ -135,7 +134,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
@@ -172,7 +172,6 @@
         "packagesPath": "/Users/roro/.nuget/packages/",
         "outputPath": "/Users/roro/Downloads/work/Freshmart/server/Freshmart.Infrastructure/obj/",
         "projectStyle": "PackageReference",
-        "UsingMicrosoftNETSdk": false,
         "configFilePaths": [
           "/Users/roro/.nuget/NuGet/NuGet.Config"
         ],
@@ -201,7 +200,8 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        }
+        },
+        "SdkAnalysisLevel": "9.0.100"
       },
       "frameworks": {
         "net9.0": {
