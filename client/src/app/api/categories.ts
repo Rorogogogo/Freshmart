@@ -88,3 +88,49 @@ export const restoreCategory = async (id: string): Promise<CategoryDto> => {
     throw error
   }
 }
+
+// Add a convenient alias for categoriesApi similar to other APIs
+export const categoriesApi = {
+  getCategories: async ({
+    page = 1,
+    pageSize = 10,
+    searchTerm = '',
+    includeDeleted = false,
+    includeSubcategories = false,
+  }: {
+    page?: number
+    pageSize?: number
+    searchTerm?: string
+    includeDeleted?: boolean
+    includeSubcategories?: boolean
+  } = {}): Promise<{
+    success: boolean
+    message: string
+    data: any[]
+    totalCount: number
+    totalPages: number
+  }> => {
+    try {
+      const params = new URLSearchParams()
+      params.append('pageNumber', page.toString())
+      params.append('pageSize', pageSize.toString())
+
+      if (searchTerm) params.append('searchTerm', searchTerm)
+      if (includeDeleted) params.append('includeDeleted', 'true')
+      if (includeSubcategories) params.append('includeSubcategories', 'true')
+
+      const response = await axios.get(
+        `${API_URL}/api/categories?${params.toString()}`
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      throw error
+    }
+  },
+  getCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  restoreCategory,
+}

@@ -33,9 +33,13 @@ namespace Freshmart.API.Controllers
         }
 
         [HttpGet("category/{categoryId}")]
-        public async Task<IActionResult> GetProductsByCategory(Guid categoryId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetProductsByCategory(
+            Guid categoryId, 
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] bool includeSubcategories = false)
         {
-            var result = await _productService.GetProductsByCategoryAsync(categoryId, page, pageSize);
+            var result = await _productService.GetProductsByCategoryAsync(categoryId, page, pageSize, includeSubcategories);
             return StatusCode(result.StatusCode, result);
         }
 

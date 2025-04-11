@@ -9,15 +9,21 @@ export interface Category {
   isDeleted: boolean
   createdAt: string
   updatedAt?: string
+  parentId?: string
+  subCategories?: Category[]
 }
 
 export interface CategoryCreateDto {
   name: string
-  description?: string
+  description: string
+  parentId?: string
 }
 
-export interface CategoryUpdateDto extends Partial<CategoryCreateDto> {
+export interface CategoryUpdateDto {
   id: string
+  name?: string
+  description?: string
+  parentId?: string
 }
 
 export interface CategoriesApiResponse {
@@ -44,6 +50,7 @@ export interface CategoriesSearchParams {
   sortBy?: string
   sortDirection?: 'asc' | 'desc'
   includeDeleted?: boolean
+  includeSubcategories?: boolean
 }
 
 export const categoriesApi = {
@@ -63,6 +70,11 @@ export const categoriesApi = {
         queryParams.append('sortDirection', params.sortDirection)
       if (params.includeDeleted)
         queryParams.append('includeDeleted', params.includeDeleted.toString())
+      if (params.includeSubcategories)
+        queryParams.append(
+          'includeSubcategories',
+          params.includeSubcategories.toString()
+        )
 
       const response: AxiosResponse<CategoriesApiResponse> =
         await apiClient.get(`/categories?${queryParams.toString()}`)
@@ -155,6 +167,35 @@ export const categoriesApi = {
       return response.data
     } catch (error) {
       console.error('Error fetching categories with counts:', error)
+      throw error
+    }
+  },
+
+  // Get categories in hierarchical structure
+  getCategoryHierarchy: async (): Promise<CategoriesApiResponse> => {
+    try {
+      const response: AxiosResponse<CategoriesApiResponse> =
+        await apiClient.get('/categories/hierarchy')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching category hierarchy:', error)
+      throw error
+    }
+  },
+
+  // Get subcategories for a specific category
+  getSubcategories: async (
+    categoryId: string
+  ): Promise<CategoriesApiResponse> => {
+    try {
+      const response: AxiosResponse<CategoriesApiResponse> =
+        await apiClient.get(`/categories/${categoryId}/subcategories`)
+      return response.data
+    } catch (error) {
+      console.error(
+        `Error fetching subcategories for category ${categoryId}:`,
+        error
+      )
       throw error
     }
   },

@@ -3,7 +3,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { headerData, getHeaderItems } from '../Header/Navigation/menuData'
+import {
+  headerData,
+  getHeaderItems,
+  processCategoriesForMenu,
+  createHeaderItems,
+} from '../Header/Navigation/menuData'
 import Logo from './Logo'
 import HeaderLink from '../Header/Navigation/HeaderLink'
 import MobileHeaderLink from '../Header/Navigation/MobileHeaderLink'
@@ -15,6 +20,55 @@ import SearchBox from '@/components/Common/SearchBox'
 import { useUser } from '@/contexts/UserContext'
 import { useNotification } from '@/contexts/NotificationContext'
 import { useCart } from '@/contexts/CartContext'
+import { categoriesApi } from '@/api/categoriesApi'
+
+// Create a custom hook to load categories for the header
+function useHeaderCategories(userRoles?: string[], isAuthenticated = true) {
+  const [menuItems, setMenuItems] = useState(() =>
+    getHeaderItems(userRoles, isAuthenticated)
+  )
+
+  // Update base menu items when user roles or authentication status changes
+  useEffect(() => {
+    setMenuItems(getHeaderItems(userRoles, isAuthenticated))
+  }, [userRoles, isAuthenticated])
+
+  // Load categories when component mounts
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const response = await categoriesApi.getCategories({
+          includeSubcategories: true,
+          includeDeleted: false,
+        })
+
+        if (response.success && response.data.length > 0) {
+          // Process the categories for the menu
+          const categoryMenuItems = processCategoriesForMenu(response.data)
+
+          // Find and update the Grocery item with the category submenu
+          setMenuItems((currentMenuItems) =>
+            currentMenuItems.map((item) => {
+              if (item.label === 'Grocery') {
+                return {
+                  ...item,
+                  submenu: categoryMenuItems,
+                }
+              }
+              return item
+            })
+          )
+        }
+      } catch (error) {
+        console.error('Error loading categories for header:', error)
+      }
+    }
+
+    loadCategories()
+  }, [])
+
+  return menuItems
+}
 
 const Header: React.FC = () => {
   const pathUrl = usePathname()
@@ -48,8 +102,12 @@ const Header: React.FC = () => {
   const showSearch =
     !pathUrl || !excludedPaths.some((path) => pathUrl.startsWith(path))
 
-  // Get dynamically generated menu items based on user role
-  const menuItems = user?.roles ? getHeaderItems(user.roles) : headerData
+  // Get dynamically generated menu items based on user role and authentication status
+  // using our new hook instead of the static function
+  const menuItems = useHeaderCategories(
+    isAuthenticated ? user?.roles : undefined,
+    isAuthenticated
+  )
 
   const handleScroll = () => {
     setSticky(window.scrollY >= 80)
@@ -138,7 +196,7 @@ const Header: React.FC = () => {
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center space-x-8">
             {menuItems.map((item, index) => (
-              <HeaderLink key={index} item={item} />
+              <HeaderLink key={`${item.label}-${index}`} item={item} />
             ))}
           </nav>
 
@@ -185,23 +243,6 @@ const Header: React.FC = () => {
                   width={24}
                   height={24}
                 />
-              )}
-            </button>
-
-            {/* Shopping Cart Icon */}
-            <button
-              onClick={toggleCart}
-              className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              <Icon
-                icon="ph:shopping-cart"
-                className="text-gray-700 dark:text-gray-200"
-                width={24}
-                height={24}
-              />
-              {totalItems > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-indigo-600 rounded-full">
-                  {totalItems}
-                </span>
               )}
             </button>
 
@@ -355,7 +396,10 @@ const Header: React.FC = () => {
 
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           {menuItems.map((item, index) => (
-            <MobileHeaderLink key={index} item={item} />
+            <MobileHeaderLink
+              key={`mobile-${item.label}-${index}`}
+              item={item}
+            />
           ))}
         </div>
         <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">

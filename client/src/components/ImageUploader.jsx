@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { uploadProductImage } from '../api/productImagesApi'
+import { productImagesApi } from '../api/productImagesApi'
 
 const ImageUploader = ({ onImageUploaded }) => {
   const [isUploading, setIsUploading] = useState(false)
@@ -26,7 +26,7 @@ const ImageUploader = ({ onImageUploaded }) => {
       setIsUploading(true)
       setError('')
 
-      const response = await uploadProductImage(file)
+      const response = await productImagesApi.uploadProductImage(file)
 
       if (response.success) {
         // Call the parent component's callback with the image URL

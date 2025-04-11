@@ -18,6 +18,9 @@ export default function CategoriesAdminPage() {
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [totalPages, setTotalPages] = useState<number>(1)
   const [totalCount, setTotalCount] = useState<number>(0)
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  )
 
   useEffect(() => {
     loadCategories(searchTerm, currentPage, 10)
@@ -33,6 +36,7 @@ export default function CategoriesAdminPage() {
       const response = await fetchCategories(page, pageSize, search)
 
       if (response.success) {
+        // Group categories by parent-child relationship for better display
         setCategories(response.data)
         setTotalPages(response.totalPages)
         setTotalCount(response.totalCount)
@@ -49,7 +53,7 @@ export default function CategoriesAdminPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setCurrentPage(1)
-    loadCategories(searchTerm, currentPage, 10)
+    loadCategories(searchTerm, 1, 10)
   }
 
   const handleDeleteCategory = async (id: string) => {
@@ -88,6 +92,26 @@ export default function CategoriesAdminPage() {
       console.error('Error restoring category:', error)
       toast.error('Failed to restore category')
     }
+  }
+
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId)
+      } else {
+        newSet.add(categoryId)
+      }
+      return newSet
+    })
+  }
+
+  // Filter for top-level categories
+  const topLevelCategories = categories.filter((cat) => !cat.parentId)
+
+  // Get child categories for a parent
+  const getChildCategories = (parentId: string) => {
+    return categories.filter((cat) => cat.parentId === parentId)
   }
 
   return (
@@ -133,7 +157,13 @@ export default function CategoriesAdminPage() {
                       Name
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Image
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Description
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Type
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Products
@@ -150,72 +180,193 @@ export default function CategoriesAdminPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {categories && categories.length === 0 ? (
+                  {topLevelCategories.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="px-6 py-4 text-center text-gray-500">
                         No categories found
                       </td>
                     </tr>
                   ) : (
-                    categories &&
-                    categories.map((category) => (
-                      <tr
-                        key={category.id}
-                        className={`hover:bg-gray-50 ${
-                          category.isDeleted ? 'bg-red-50' : ''
-                        }`}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {category.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {category.description}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {category.productsCount}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              category.isDeleted
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-green-100 text-green-800'
+                    // Render top-level categories first
+                    topLevelCategories.map((category) => {
+                      const childCategories = getChildCategories(category.id)
+                      const hasChildren = childCategories.length > 0
+                      const isExpanded = expandedCategories.has(category.id)
+
+                      return (
+                        <React.Fragment key={category.id}>
+                          <tr
+                            className={`hover:bg-gray-50 ${
+                              category.isDeleted ? 'bg-red-50' : ''
                             }`}>
-                            {category.isDeleted ? 'Deleted' : 'Active'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {new Date(category.createdAt).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex space-x-2">
-                            <Link
-                              href={`/admin/categories/edit/${category.id}`}
-                              className="text-blue-600 hover:text-blue-900">
-                              Edit
-                            </Link>
-                            {category.isDeleted ? (
-                              <button
-                                onClick={() =>
-                                  handleRestoreCategory(category.id)
-                                }
-                                className="text-green-600 hover:text-green-900">
-                                Restore
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() =>
-                                  handleDeleteCategory(category.id)
-                                }
-                                className="text-red-600 hover:text-red-900">
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                            <td className="px-6 py-4 whitespace-nowrap flex items-center">
+                              {hasChildren && (
+                                <button
+                                  onClick={() =>
+                                    toggleCategoryExpansion(category.id)
+                                  }
+                                  className="mr-2 text-gray-500 hover:text-gray-700">
+                                  {isExpanded ? '▼' : '▶'}
+                                </button>
+                              )}
+                              <span className="font-medium">
+                                {category.name}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {category.imageUrl ? (
+                                <img
+                                  src={category.imageUrl}
+                                  alt={category.name}
+                                  className="h-10 w-10 object-cover rounded-md"
+                                />
+                              ) : (
+                                <span className="text-gray-400">No image</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {category.description}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                Top Level
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {category.productsCount}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  category.isDeleted
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-green-100 text-green-800'
+                                }`}>
+                                {category.isDeleted ? 'Deleted' : 'Active'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {new Date(
+                                category.createdAt
+                              ).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <div className="flex space-x-2">
+                                <Link
+                                  href={`/admin/categories/edit/${category.id}`}
+                                  className="text-blue-600 hover:text-blue-900">
+                                  Edit
+                                </Link>
+                                {category.isDeleted ? (
+                                  <button
+                                    onClick={() =>
+                                      handleRestoreCategory(category.id)
+                                    }
+                                    className="text-green-600 hover:text-green-900">
+                                    Restore
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteCategory(category.id)
+                                    }
+                                    className="text-red-600 hover:text-red-900">
+                                    Delete
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+
+                          {/* Render child categories if parent is expanded */}
+                          {isExpanded &&
+                            childCategories.map((childCategory) => (
+                              <tr
+                                key={childCategory.id}
+                                className={`hover:bg-gray-50 ${
+                                  childCategory.isDeleted
+                                    ? 'bg-red-50'
+                                    : 'bg-gray-50'
+                                }`}>
+                                <td className="px-6 py-4 whitespace-nowrap pl-12 border-l-2 border-l-gray-300">
+                                  <span>{childCategory.name}</span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  {childCategory.imageUrl ? (
+                                    <img
+                                      src={childCategory.imageUrl}
+                                      alt={childCategory.name}
+                                      className="h-10 w-10 object-cover rounded-md"
+                                    />
+                                  ) : (
+                                    <span className="text-gray-400">
+                                      No image
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  {childCategory.description}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                                    Subcategory of {category.name}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  {childCategory.productsCount}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span
+                                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                      childCategory.isDeleted
+                                        ? 'bg-red-100 text-red-800'
+                                        : 'bg-green-100 text-green-800'
+                                    }`}>
+                                    {childCategory.isDeleted
+                                      ? 'Deleted'
+                                      : 'Active'}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  {new Date(
+                                    childCategory.createdAt
+                                  ).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  <div className="flex space-x-2">
+                                    <Link
+                                      href={`/admin/categories/edit/${childCategory.id}`}
+                                      className="text-blue-600 hover:text-blue-900">
+                                      Edit
+                                    </Link>
+                                    {childCategory.isDeleted ? (
+                                      <button
+                                        onClick={() =>
+                                          handleRestoreCategory(
+                                            childCategory.id
+                                          )
+                                        }
+                                        className="text-green-600 hover:text-green-900">
+                                        Restore
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteCategory(childCategory.id)
+                                        }
+                                        className="text-red-600 hover:text-red-900">
+                                        Delete
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                        </React.Fragment>
+                      )
+                    })
                   )}
                 </tbody>
               </table>

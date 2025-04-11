@@ -22,9 +22,10 @@ namespace Freshmart.API.Controllers
         public async Task<IActionResult> GetAllCategories(
             [FromQuery] int page = 1, 
             [FromQuery] int pageSize = 10,
-            [FromQuery] string searchTerm = null)
+            [FromQuery] string searchTerm = null,
+            [FromQuery] bool includeSubcategories = false)
         {
-            var result = await _categoryService.GetAllCategoriesAsync(page, pageSize, searchTerm);
+            var result = await _categoryService.GetAllCategoriesAsync(page, pageSize, searchTerm, includeSubcategories);
             return StatusCode(result.StatusCode, result);
         }
 
@@ -32,6 +33,27 @@ namespace Freshmart.API.Controllers
         public async Task<IActionResult> GetCategoryById(Guid id)
         {
             var result = await _categoryService.GetCategoryByIdAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+        
+        [HttpGet("hierarchy")]
+        public async Task<IActionResult> GetCategoryHierarchy()
+        {
+            var result = await _categoryService.GetCategoryHierarchyAsync();
+            return StatusCode(result.StatusCode, result);
+        }
+        
+        [HttpGet("{id}/subcategories")]
+        public async Task<IActionResult> GetSubcategories(Guid id)
+        {
+            var result = await _categoryService.GetSubcategoriesAsync(id);
+            return StatusCode(result.StatusCode, result);
+        }
+        
+        [HttpGet("{id}/with-subcategories")]
+        public async Task<IActionResult> GetCategoryWithSubcategories(Guid id)
+        {
+            var result = await _categoryService.GetCategoryWithSubcategoriesAsync(id);
             return StatusCode(result.StatusCode, result);
         }
 

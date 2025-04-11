@@ -112,7 +112,7 @@ namespace Freshmart.Infrastructure.Migrations
                         {
                             Id = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991873"),
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "dfd92623-8828-4d7f-ba7f-d25b5fbfb978",
+                            ConcurrencyStamp = "c9d4c053-49b6-410c-bc78-2d54a9991875",
                             CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Email = "admin@freshmart.com",
                             EmailConfirmed = true,
@@ -123,7 +123,7 @@ namespace Freshmart.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@FRESHMART.COM",
                             NormalizedUserName = "ADMIN@FRESHMART.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEH8K562A1KbQYmrHj9PZ3VsosoF+OKRZWkF3rJihV+LsDn0bPLLnOIaEcCAwyBdUvw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEE0jo/HFHDTvK8/Rnf7jUS8iCb4W0I9cDQc1XAkFZLHlJwLYU/BHdNhsQtE/gdS7xA==",
                             PhoneNumberConfirmed = false,
                             SecurityStamp = "c9d4c053-49b6-410c-bc78-2d54a9991876",
                             TwoFactorEnabled = false,
@@ -154,41 +154,127 @@ namespace Freshmart.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.ToTable("categories", (string)null);
+                    b.HasIndex("ParentId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991870"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh fruits",
-                            ImageUrl = "/images/categories/fruits.jpg",
-                            IsDeleted = false,
-                            Name = "Fruits"
-                        },
-                        new
-                        {
-                            Id = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991871"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh vegetables",
-                            ImageUrl = "/images/categories/vegetables.jpg",
-                            IsDeleted = false,
-                            Name = "Vegetables"
-                        },
-                        new
-                        {
-                            Id = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991872"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Dairy products",
-                            ImageUrl = "/images/categories/dairy.jpg",
-                            IsDeleted = false,
-                            Name = "Dairy"
-                        });
+                    b.ToTable("categories", (string)null);
+                });
+
+            modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.Order", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ShippingAddress")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ZipCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("orders", (string)null);
+                });
+
+            modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.OrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("order_items", (string)null);
                 });
 
             modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.Product", b =>
@@ -238,134 +324,6 @@ namespace Freshmart.Infrastructure.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("products", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991880"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991870"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh red apples",
-                            ImageUrl = "/images/products/apple.jpg",
-                            IsDeleted = false,
-                            Name = "Apple",
-                            Price = 1.99m,
-                            Rating = 4.5m,
-                            ReviewCount = 28,
-                            StockQuantity = 100
-                        },
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991881"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991870"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh yellow bananas",
-                            ImageUrl = "/images/products/banana.jpg",
-                            IsDeleted = false,
-                            Name = "Banana",
-                            Price = 0.99m,
-                            Rating = 4.8m,
-                            ReviewCount = 32,
-                            StockQuantity = 150
-                        },
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991882"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991870"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh juicy oranges",
-                            ImageUrl = "/images/products/orange.jpg",
-                            IsDeleted = false,
-                            Name = "Orange",
-                            Price = 1.49m,
-                            Rating = 4.6m,
-                            ReviewCount = 24,
-                            StockQuantity = 80
-                        },
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991883"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991871"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh organic carrots",
-                            ImageUrl = "/images/products/carrot.jpg",
-                            IsDeleted = false,
-                            Name = "Carrot",
-                            Price = 1.29m,
-                            Rating = 4.4m,
-                            ReviewCount = 18,
-                            StockQuantity = 120
-                        },
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991884"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991871"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh green broccoli",
-                            ImageUrl = "/images/products/broccoli.jpg",
-                            IsDeleted = false,
-                            Name = "Broccoli",
-                            Price = 1.99m,
-                            Rating = 4.3m,
-                            ReviewCount = 15,
-                            StockQuantity = 70
-                        },
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991885"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991871"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh leafy spinach",
-                            ImageUrl = "/images/products/spinach.jpg",
-                            IsDeleted = false,
-                            Name = "Spinach",
-                            Price = 2.49m,
-                            Rating = 4.7m,
-                            ReviewCount = 22,
-                            StockQuantity = 60
-                        },
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991886"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991872"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Fresh whole milk",
-                            ImageUrl = "/images/products/milk.jpg",
-                            IsDeleted = false,
-                            Name = "Milk",
-                            Price = 2.99m,
-                            Rating = 4.9m,
-                            ReviewCount = 37,
-                            StockQuantity = 50
-                        },
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991887"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991872"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Premium cheddar cheese",
-                            ImageUrl = "/images/products/cheese.jpg",
-                            IsDeleted = false,
-                            Name = "Cheese",
-                            Price = 3.99m,
-                            Rating = 4.8m,
-                            ReviewCount = 29,
-                            StockQuantity = 40
-                        },
-                        new
-                        {
-                            Id = new Guid("7a4b1c53-49b6-410c-bc78-2d54a9991888"),
-                            CategoryId = new Guid("c9d4c053-49b6-410c-bc78-2d54a9991872"),
-                            CreatedAt = new DateTime(2023, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Natural Greek yogurt",
-                            ImageUrl = "/images/products/yogurt.jpg",
-                            IsDeleted = false,
-                            Name = "Yogurt",
-                            Price = 1.79m,
-                            Rating = 4.6m,
-                            ReviewCount = 26,
-                            StockQuantity = 90
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -514,6 +472,46 @@ namespace Freshmart.Infrastructure.Migrations
                     b.ToTable("user_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.Category", b =>
+                {
+                    b.HasOne("Freshmart.Infrastructure.Data.DbEntities.Category", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.Order", b =>
+                {
+                    b.HasOne("Freshmart.Infrastructure.Data.DbEntities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.OrderItem", b =>
+                {
+                    b.HasOne("Freshmart.Infrastructure.Data.DbEntities.Order", "Order")
+                        .WithMany("OrderItems")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Freshmart.Infrastructure.Data.DbEntities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.Product", b =>
                 {
                     b.HasOne("Freshmart.Infrastructure.Data.DbEntities.Category", "Category")
@@ -578,7 +576,14 @@ namespace Freshmart.Infrastructure.Migrations
 
             modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.Category", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("Freshmart.Infrastructure.Data.DbEntities.Order", b =>
+                {
+                    b.Navigation("OrderItems");
                 });
 #pragma warning restore 612, 618
         }

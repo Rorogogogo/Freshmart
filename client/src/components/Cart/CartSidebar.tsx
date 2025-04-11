@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Icon } from '@iconify/react/dist/iconify.js'
@@ -18,17 +18,77 @@ const CartSidebar: React.FC = () => {
     totalItems,
   } = useCart()
 
-  if (!isOpen) return null
+  const [isHovering, setIsHovering] = useState(false)
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const cartRef = useRef<HTMLDivElement>(null)
+
+  // Handle hover state for the cart
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current)
+      hoverTimeoutRef.current = null
+    }
+    setIsHovering(true)
+  }
+
+  const handleMouseLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovering(false)
+    }, 300) // Small delay to prevent flickering
+  }
+
+  // Handle click outside to close cart
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        cartRef.current &&
+        !cartRef.current.contains(event.target as Node) &&
+        isHovering
+      ) {
+        setIsHovering(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isHovering])
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current)
+      }
+    }
+  }, [])
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <>
+      {/* Floating Cart Button */}
       <div
-        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={toggleCart}
-      />
+        className="fixed top-24 right-0 z-40 flex items-center"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        ref={cartRef}>
+        {/* Cart Button */}
+        <div className="bg-indigo-600 p-3 text-white rounded-l-lg shadow-lg cursor-pointer flex items-center justify-center">
+          <div className="relative">
+            <Icon icon="ph:shopping-cart" width={24} height={24} />
+            {totalItems > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {totalItems}
+              </span>
+            )}
+          </div>
+        </div>
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex">
-        <div className="w-screen max-w-md">
+        {/* Cart Panel */}
+        <div
+          className={`fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-xl transition-transform duration-300 ease-in-out ${
+            isHovering ? 'translate-x-0' : 'translate-x-full'
+          }`}>
           <div className="h-full flex flex-col bg-white shadow-xl overflow-y-auto">
             {/* Header */}
             <div className="p-4 border-b flex justify-between items-center">
@@ -37,7 +97,7 @@ const CartSidebar: React.FC = () => {
                 {totalItems === 1 ? 'item' : 'items'})
               </h2>
               <button
-                onClick={toggleCart}
+                onClick={() => setIsHovering(false)}
                 className="text-gray-500 hover:text-gray-700">
                 <Icon icon="ph:x" width={24} height={24} />
               </button>
@@ -55,7 +115,7 @@ const CartSidebar: React.FC = () => {
                   />
                   <h3 className="mt-2 text-gray-500">Your cart is empty</h3>
                   <button
-                    onClick={toggleCart}
+                    onClick={() => setIsHovering(false)}
                     className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
                     Continue Shopping
                   </button>
@@ -86,7 +146,7 @@ const CartSidebar: React.FC = () => {
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={toggleCart}
+                    onClick={() => setIsHovering(false)}
                     className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
                     Continue Shopping
                   </button>
@@ -101,7 +161,7 @@ const CartSidebar: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

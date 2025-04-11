@@ -26,13 +26,22 @@ const GroceryItem: React.FC<GroceryItemProps> = ({
   stockQuantity,
   onClickDetails,
 }) => {
-  const { addToCart } = useCart()
+  const { addToCart, items } = useCart()
+
+  // Check if item is already in cart
+  const itemInCart = items.find((item) => item.id === id)
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent triggering the parent onClick (opening product details)
 
     if (stockQuantity <= 0) {
       toast.error('This product is out of stock')
+      return
+    }
+
+    // Check if adding more would exceed stock
+    if (itemInCart && itemInCart.quantity >= stockQuantity) {
+      toast.error(`Maximum available quantity is ${stockQuantity}`)
       return
     }
 
@@ -52,7 +61,12 @@ const GroceryItem: React.FC<GroceryItemProps> = ({
       updatedAt: null,
     })
 
-    toast.success(`${name} added to cart`)
+    // Show different message if item is already in cart
+    if (itemInCart) {
+      toast.success(`Added another ${name} to cart`)
+    } else {
+      toast.success(`${name} added to cart`)
+    }
   }
 
   return (
@@ -64,11 +78,31 @@ const GroceryItem: React.FC<GroceryItemProps> = ({
           src={imageUrl}
           alt={name}
           fill
-          className="object-cover"
+          className={`object-cover ${
+            stockQuantity <= 0 ? 'opacity-70 grayscale' : ''
+          }`}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-          {stockQuantity > 0 ? 'In Stock' : 'Out of Stock'}
+        <div
+          className={`absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1 ${
+            stockQuantity > 0
+              ? stockQuantity < 5
+                ? 'bg-orange-500'
+                : 'bg-green-500'
+              : 'bg-red-500'
+          }`}>
+          <Icon
+            icon={
+              stockQuantity > 0 ? 'ph:check-circle-fill' : 'ph:x-circle-fill'
+            }
+            width={14}
+            height={14}
+          />
+          {stockQuantity > 0
+            ? stockQuantity < 5
+              ? `Only ${stockQuantity} left`
+              : `${stockQuantity} in stock`
+            : 'Out of Stock'}
         </div>
         <div className="absolute top-2 left-2 bg-indigo-500 text-white text-xs px-2 py-1 rounded-full">
           {categoryName}
@@ -111,8 +145,9 @@ const GroceryItem: React.FC<GroceryItemProps> = ({
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
             onClick={handleAddToCart}
-            disabled={stockQuantity <= 0}>
-            Add to Cart
+            disabled={stockQuantity <= 0}
+            aria-label={stockQuantity > 0 ? 'Add to cart' : 'Out of stock'}>
+            {itemInCart ? 'Add Again' : 'Add to Cart'}
           </button>
         </div>
       </div>

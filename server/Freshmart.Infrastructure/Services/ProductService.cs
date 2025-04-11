@@ -103,19 +103,49 @@ namespace Freshmart.Infrastructure.Services
             }
         }
 
-        public async Task<DataCollectionApiResponseDto<ProductDto>> GetProductsByCategoryAsync(Guid categoryId, int page = 1, int pageSize = 10)
+        public async Task<DataCollectionApiResponseDto<ProductDto>> GetProductsByCategoryAsync(Guid categoryId, int page = 1, int pageSize = 10, bool includeSubcategories = false)
         {
             try
             {
-                var totalItems = await _context.Products
-                    .Where(p => p.CategoryId == categoryId)
-                    .CountAsync();
+                // Get the category and check if it exists
+                var category = await _context.Categories
+                    .FirstOrDefaultAsync(c => c.Id == categoryId && !c.IsDeleted);
+                
+                if (category == null)
+                {
+                    return new DataCollectionApiResponseDto<ProductDto>
+                    {
+                        Message = "Category not found",
+                        Success = false,
+                        StatusCode = 404
+                    };
+                }
+                
+                IQueryable<Product> query = _context.Products.Include(p => p.Category);
+                
+                // Filter products based on the category
+                if (includeSubcategories)
+                {
+                    // Get all subcategory IDs
+                    var subcategoryIds = await GetAllSubcategoryIdsAsync(categoryId);
+                    
+                    // Include the main category and all subcategories
+                    var allCategoryIds = new List<Guid> { categoryId };
+                    allCategoryIds.AddRange(subcategoryIds);
+                    
+                    // Filter products that belong to any of these categories
+                    query = query.Where(p => allCategoryIds.Contains(p.CategoryId) && !p.IsDeleted);
+                }
+                else
+                {
+                    // Only include products from the specified category
+                    query = query.Where(p => p.CategoryId == categoryId && !p.IsDeleted);
+                }
 
+                var totalItems = await query.CountAsync();
                 var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
-                var products = await _context.Products
-                    .Include(p => p.Category)
-                    .Where(p => p.CategoryId == categoryId)
+                var products = await query
                     .OrderBy(p => p.Name)
                     .Skip((page - 1) * pageSize)
                     .Take(pageSize)
@@ -395,6 +425,29 @@ namespace Freshmart.Infrastructure.Services
                 CreatedAt = product.CreatedAt,
                 UpdatedAt = product.UpdatedAt
             };
+        }
+
+        // Helper method to get all subcategory IDs recursively
+        private async Task<List<Guid>> GetAllSubcategoryIdsAsync(Guid categoryId)
+        {
+            var result = new List<Guid>();
+            
+            // Get immediate subcategories
+            var subcategories = await _context.Categories
+                .Where(c => c.ParentId == categoryId && !c.IsDeleted)
+                .ToListAsync();
+            
+            foreach (var subcategory in subcategories)
+            {
+                // Add current subcategory
+                result.Add(subcategory.Id);
+                
+                // Get nested subcategories recursively
+                var nestedSubcategories = await GetAllSubcategoryIdsAsync(subcategory.Id);
+                result.AddRange(nestedSubcategories);
+            }
+            
+            return result;
         }
     }
 } 

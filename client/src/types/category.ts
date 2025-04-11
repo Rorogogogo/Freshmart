@@ -6,16 +6,32 @@ export interface CategoryDto {
   isDeleted: boolean
   createdAt: string
   updatedAt: string
+  parentId?: string
+  subCategories?: CategoryDto[]
+  imageUrl?: string
 }
 
 export interface CreateCategoryDto {
   name: string
   description: string
+  parentId?: string
+  imageUrl?: string
 }
 
 export interface UpdateCategoryDto {
   name?: string
   description?: string
+  parentId?: string
+  imageUrl?: string
+}
+
+export interface CategoryHierarchy {
+  id: string
+  name: string
+  description: string
+  productsCount: number
+  subCategories: CategoryDto[]
+  imageUrl?: string
 }
 
 export interface PagedList<T> {

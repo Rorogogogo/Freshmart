@@ -11,8 +11,21 @@ import { NotificationProvider } from '@/contexts/NotificationContext'
 import { UserProvider } from '@/contexts/UserContext'
 import { CartProvider } from '@/contexts/CartContext'
 import CartSidebar from '@/components/Cart/CartSidebar'
+import { Metadata } from 'next'
 
 const font = Urbanist({ subsets: ['latin'] })
+
+export const metadata: Metadata = {
+  title: {
+    template: '%s | Freshmart',
+    default: 'Freshmart - Fresh Groceries Delivered',
+  },
+  description: 'Your one-stop shop for fresh, organic produce and groceries',
+  keywords:
+    'groceries, fresh food, organic produce, online groceries, delivery',
+  authors: [{ name: 'Freshmart Team' }],
+  metadataBase: new URL('https://freshmart.com'),
+}
 
 export default function RootLayout({
   children,

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Freshmart.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+979bb2d7f43e9b96f88ce9dcedcd1b1afe8f576a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4fc994d3d559757853f3410a04e5b895d388465c")]
 [assembly: System.Reflection.AssemblyProductAttribute("Freshmart.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Freshmart.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
