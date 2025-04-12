@@ -1,17 +1,51 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { HeaderItem } from '../../../../types/menu'
 import { usePathname } from 'next/navigation'
 import { Icon } from '@iconify/react/dist/iconify.js'
+import { categoriesApi } from '@/api/categoriesApi'
+import { processCategoriesForMenu } from '../Navigation/menuData'
 
 const HeaderLink: React.FC<{ item: HeaderItem }> = ({ item }) => {
   const [submenuOpen, setSubmenuOpen] = useState(false)
   const path = usePathname() || ''
+  const [dynamicSubmenu, setDynamicSubmenu] = useState<HeaderItem[]>(
+    item.submenu || []
+  )
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false)
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = async () => {
     if (item.submenu) {
       setSubmenuOpen(true)
+
+      // Only load categories for the Grocery menu item when it's hovered
+      if (
+        item.label === 'Grocery' &&
+        dynamicSubmenu.length === 0 &&
+        !isLoadingCategories
+      ) {
+        setIsLoadingCategories(true)
+        try {
+          console.log('Fetching categories on hover...')
+          const response = await categoriesApi.getCategories({
+            includeSubcategories: true,
+            includeDeleted: false,
+          })
+
+          if (response.success && response.data.length > 0) {
+            const categoryMenuItems = processCategoriesForMenu(response.data)
+            console.log('Categories loaded on hover:', categoryMenuItems.length)
+            setDynamicSubmenu(categoryMenuItems)
+          } else {
+            console.warn('No categories found on hover')
+          }
+        } catch (error) {
+          console.error('Error loading categories on hover:', error)
+        } finally {
+          setIsLoadingCategories(false)
+        }
+      }
     }
   }
 
@@ -51,9 +85,29 @@ const HeaderLink: React.FC<{ item: HeaderItem }> = ({ item }) => {
           style={{ marginTop: '8px' }}>
           {/* Invisible hover bridge to prevent gap */}
           <div className="absolute h-2 w-full top-[-8px]"></div>
-          {item.submenu.map((subItem, index) => (
-            <SubMenuItem key={index} item={subItem} path={path} />
-          ))}
+
+          {/* Loading indicator */}
+          {isLoadingCategories && (
+            <div className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+              <Icon
+                icon="ph:spinner"
+                className="animate-spin mr-2"
+                width={14}
+                height={14}
+              />
+              Loading...
+            </div>
+          )}
+
+          {/* Show dynamic submenu from state if available */}
+          {dynamicSubmenu.length > 0
+            ? dynamicSubmenu.map((subItem, index) => (
+                <SubMenuItem key={index} item={subItem} path={path} />
+              ))
+            : // Show static submenu as fallback
+              item.submenu.map((subItem, index) => (
+                <SubMenuItem key={index} item={subItem} path={path} />
+              ))}
         </div>
       )}
     </div>

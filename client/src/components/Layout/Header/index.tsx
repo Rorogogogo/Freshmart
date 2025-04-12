@@ -22,54 +22,6 @@ import { useNotification } from '@/contexts/NotificationContext'
 import { useCart } from '@/contexts/CartContext'
 import { categoriesApi } from '@/api/categoriesApi'
 
-// Create a custom hook to load categories for the header
-function useHeaderCategories(userRoles?: string[], isAuthenticated = true) {
-  const [menuItems, setMenuItems] = useState(() =>
-    getHeaderItems(userRoles, isAuthenticated)
-  )
-
-  // Update base menu items when user roles or authentication status changes
-  useEffect(() => {
-    setMenuItems(getHeaderItems(userRoles, isAuthenticated))
-  }, [userRoles, isAuthenticated])
-
-  // Load categories when component mounts
-  useEffect(() => {
-    async function loadCategories() {
-      try {
-        const response = await categoriesApi.getCategories({
-          includeSubcategories: true,
-          includeDeleted: false,
-        })
-
-        if (response.success && response.data.length > 0) {
-          // Process the categories for the menu
-          const categoryMenuItems = processCategoriesForMenu(response.data)
-
-          // Find and update the Grocery item with the category submenu
-          setMenuItems((currentMenuItems) =>
-            currentMenuItems.map((item) => {
-              if (item.label === 'Grocery') {
-                return {
-                  ...item,
-                  submenu: categoryMenuItems,
-                }
-              }
-              return item
-            })
-          )
-        }
-      } catch (error) {
-        console.error('Error loading categories for header:', error)
-      }
-    }
-
-    loadCategories()
-  }, [])
-
-  return menuItems
-}
-
 const Header: React.FC = () => {
   const pathUrl = usePathname()
   const { theme, setTheme } = useTheme()
@@ -101,13 +53,6 @@ const Header: React.FC = () => {
 
   const showSearch =
     !pathUrl || !excludedPaths.some((path) => pathUrl.startsWith(path))
-
-  // Get dynamically generated menu items based on user role and authentication status
-  // using our new hook instead of the static function
-  const menuItems = useHeaderCategories(
-    isAuthenticated ? user?.roles : undefined,
-    isAuthenticated
-  )
 
   const handleScroll = () => {
     setSticky(window.scrollY >= 80)
@@ -175,8 +120,13 @@ const Header: React.FC = () => {
   }
 
   const handleLogout = () => {
-    logout()
+    console.log('Logout initiated...')
+
+    // Close the profile menu
     setIsProfileMenuOpen(false)
+
+    // Call the logout function from context
+    logout()
   }
 
   return (
@@ -195,7 +145,10 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center space-x-8">
-            {menuItems.map((item, index) => (
+            {getHeaderItems(
+              isAuthenticated ? user?.roles : undefined,
+              isAuthenticated
+            ).map((item, index) => (
               <HeaderLink key={`${item.label}-${index}`} item={item} />
             ))}
           </nav>
@@ -395,7 +348,10 @@ const Header: React.FC = () => {
         )}
 
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {menuItems.map((item, index) => (
+          {getHeaderItems(
+            isAuthenticated ? user?.roles : undefined,
+            isAuthenticated
+          ).map((item, index) => (
             <MobileHeaderLink
               key={`mobile-${item.label}-${index}`}
               item={item}

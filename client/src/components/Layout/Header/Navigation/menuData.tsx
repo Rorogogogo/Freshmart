@@ -18,6 +18,12 @@ export const headerData: HeaderItem[] = baseHeaderItems
 export const processCategoriesForMenu = (
   categories: Category[]
 ): HeaderItem[] => {
+  // Safety check - if categories is null or empty, return empty array
+  if (!categories || categories.length === 0) {
+    console.warn('No categories provided to processCategoriesForMenu')
+    return []
+  }
+
   // Process categories into the menu format
   const categoryMenuItems = categories
     .filter((category) => !category.parentId) // Filter for root categories
@@ -52,23 +58,29 @@ export const createHeaderItems = (
   userRoles?: string[],
   isAuthenticated = true
 ): HeaderItem[] => {
-  // Find and update the Grocery item with category submenu
-  const updatedItems = menuItems.map((item) => item)
+  // Clone to avoid mutations
+  const updatedItems = [...menuItems]
 
   // Add Orders link for authenticated users
   if (isAuthenticated) {
-    updatedItems.push({
-      label: 'My Orders',
-      href: '/orders',
-    })
+    // Check if Orders already exists
+    if (!updatedItems.some((item) => item.label === 'My Orders')) {
+      updatedItems.push({
+        label: 'My Orders',
+        href: '/orders',
+      })
+    }
   }
 
   // Add admin dashboard link if user has admin role
   if (userRoles?.some((role) => role.toUpperCase() === 'ADMIN')) {
-    updatedItems.push({
-      label: 'Admin',
-      href: '/admin/products',
-    })
+    // Check if Admin already exists
+    // if (!updatedItems.some((item) => item.label === 'Admin')) {
+    //   updatedItems.push({
+    //     label: 'Admin',
+    //     href: '/admin/products',
+    //   })
+    // }
   }
 
   return updatedItems
@@ -79,5 +91,6 @@ export const getHeaderItems = (
   userRoles?: string[],
   isAuthenticated = true
 ): HeaderItem[] => {
-  return createHeaderItems(baseHeaderItems, userRoles, isAuthenticated)
+  console.log('getHeaderItems called, isAuthenticated:', isAuthenticated)
+  return createHeaderItems([...baseHeaderItems], userRoles, isAuthenticated)
 }
